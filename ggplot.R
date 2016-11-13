@@ -22,7 +22,8 @@ yellow <- subset(yellow, pickup_longitude!=0 & pickup_longitude< -71 &
 yellow_count <- yellow[, list(paircount=.N), by=c("pickup_longitude", "pickup_latitude")]
 
 
-yellow <- subset(yellow, pickup_longitude)
+yellow <- subset(yellow, pickup_latitude<41)
+yellow <- subset(yellow, pickup_latitude>-74.1)
 
 ggplot() + 
   geom_polygon(data=nyc_df, 
