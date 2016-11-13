@@ -27,5 +27,5 @@ yellow <- subset(yellow, pickup_longitude)
 ggplot() + 
   geom_polygon(data=nyc_df, 
                aes(x=long, y=lat, group=group, colour=I("white"))) + 
-  geom_point(data=yellow_count, 
-             aes(x=pickup_longitude, y=pickup_latitude, alpha=paircount, colour="white"))
+  geom_point(data=yellow, size=.1, alpha=1/50, 
+             aes(x=pickup_longitude, y=pickup_latitude, colour="yellow"))
