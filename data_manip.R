@@ -37,7 +37,7 @@ loadAndManipulate <- function(year, data_path){
   for (i in 1:12){
     # Read monthly data
     data_yellow <- read_csv(paste0(data_path, "yellow_tripdata_", year, "-", months[i], ".csv"), 
-                            col_names = column_names, n_max = 10000, skip = 1)
+                            col_names = column_names, n_max = 100000, skip = 1)
     
     # As data table for faster manipulation
     data_yellow <- as.data.table(data_yellow)
@@ -51,16 +51,26 @@ loadAndManipulate <- function(year, data_path){
                         pickup_day = as.numeric(substr(pickup_datetime, 9, 10)), 
                         pickup_hour = as.numeric(substr(pickup_datetime, 12, 13)), 
                         weekday = wday(pickup_datetime, label = T),
-                        duration = as.numeric(dropoff_datetime - pickup_datetime)/60)]
+                        duration = as.numeric(dropoff_datetime - pickup_datetime)/60, 
+                        payment_type = ifelse(payment_type %in% credit, 1, 
+                                               ifelse(payment_type %in% cash, 2, 3)), 
+                        vendor = NULL,
+                        pickup_datetime = NULL, 
+                        dropoff_datetime = NULL, 
+                        store = NULL)]
+    
+    if (year==2015) data_yellow[, imp_surcharge := NULL]
     
     # Update payment type to corresponding integer
     # 1 = Credit Card
     # 2 = Cash
     # 3 = Other
-    data_yellow[, payment_type := ifelse(payment_type %in% credit, 1, 
-                                ifelse(payment_type %in% cash, 2, 3))]
     
-    data_yellow <- data_yellow[dropoff_lon != 0]
+    # Remove illogical values
+    data_yellow <- data_yellow[dropoff_lon != 0 & 
+                               passenger_count > 0 &  
+                               trip_distance > 0 &  
+                               duration > 0]
     
     # Add geographic information
     # PICKUP
@@ -78,9 +88,9 @@ loadAndManipulate <- function(year, data_path){
 
     data_yellow[, dropoff_locID := over(lonlat, nyc)$LocationID]
     
-    print(head(data_yellow))
+    fwrite(data_yellow, paste0("E:/Daten/yellow", year, ".csv"), append = T)
   }
 
 }
 
-loadAndManipulate(2014, "E:/Daten/")
+loadAndManipulate(2015, "E:/Daten/")
