@@ -1,0 +1,72 @@
+---
+title: "Pakete auf Hilbert installieren"
+author: "Matthias Schneider"
+date: "3 Januar 2017"
+output: 
+  html_document:
+    highlight: pygments
+---
+
+# curl
+Das Problem bei der Installation des curl-Paketes ist, dass es Dependencies benötigt, die vorher von Source kompiliert werden und auf welche anschließend verwiesen werden muss. 
+
+Source entpacken und im Home-Verzeichnis installieren.
+```{r, engine = 'bash', eval = FALSE}
+tar -zxvf curl-7.52.1.tar.gz
+cd ./curl-7.52.1
+./configure --prefix=$HOME/CURL
+make
+make install
+```
+
+Paket von Source installieren
+```{r, engine = 'bash', eval = FALSE}
+#!/bin/bash
+
+#PBS -l select=1:ncpus=1:mem=3gb:arch="uv2000"
+#PBS -l walltime=01:59:00
+#PBS -r n
+#PBS -N Schneider
+#PBS -A "SinStatEc"
+#PBS -m e
+
+module load R
+module load gcc/6.1.0
+
+echo $LD_LIBRARY_PATH
+LD_LIBRARY_PATH="$HOME/CURL/lib:$LD_LIBRARY_PATH"
+echo $LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+PKG_CONFIG_PATH="$HOME/CURL/lib/pkgconfig:PKG_CONFIG_PATH"
+export PKG_CONFIG_PATH
+echo $PKG_CONFIG_PATH
+
+R CMD INSTALL -l ./RLib ./package_sources/curl_2.3.tar.gz
+
+```
+
+# rgdal
+Zuerst müssen GDAL und und PROJ installiert werden (s.o.). Danach müssen die Pfade angepasst werden und beim Installieren von rgdal auf PROJ verwiesen werden.
+
+```{r, engine='bash', eval=FALSE}
+#!/bin/bash
+
+#PBS -l select=1:ncpus=1:mem=3gb:arch="uv2000"
+#PBS -l walltime=01:59:00
+#PBS -r n
+#PBS -N Schneider
+#PBS -A "SinStatEc"
+#PBS -m e
+
+module load R
+module load intel/xe2015
+
+export PATH=$HOME/GDAL/bin:$HOME/PROJ/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/GDAL/lib:$HOME/PROJ/lib:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$HOME/GDAL/lib/pkgconfig:$HOME/PROJ/lib/pkgconfig:$PKG_CONFIG_PATH
+export GDAL_DATA=$HOME/GDAL/share/gdal
+export PROJ_DATA=$HOME/PROJ/share/proj
+
+R CMD INSTALL -l ./RLib ./package_sources/rgdal_1.2-5.tar.gz --configure-args='--with-proj-include=/home/masch246/PROJ/include --with-proj-lib=$HOME/PROJ/lib'
+
+```
